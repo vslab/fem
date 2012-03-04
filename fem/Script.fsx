@@ -24,4 +24,10 @@ FSharpChart.Rows [
  ] |> FSharpChart.Create
 
 
- 
+type SampleFunction (f, en) =
+    member o.Bind(v,f) = f(v)
+    member o.Return(v) = v
+
+let sample = SampleFunction(gaussianBoxMuller 0. 1., Uniform.samplerEnumerator)
+
+
