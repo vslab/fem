@@ -26,3 +26,24 @@ let currSample (ss:samplerEnumerator) =
 
 let moveNext (ss:samplerEnumerator) =
   ss.MoveNext() |> ignore
+
+let samplersDict = new System.Collections.Generic.Dictionary<string,samplerEnumerator>()
+
+let givemeSampler name =
+    if (samplersDict.ContainsKey(name)) then
+        samplersDict.[name]
+    else
+        let s = getSource(fresh())
+        samplersDict.Add(name, s)
+        s
+
+let updateSamplers () =
+    samplersDict.Values |> Seq.iter (fun s -> moveNext s )
+
+let makeSeq f =
+    seq {
+        while (true) do
+            updateSamplers()     
+            yield f() 
+    }
+

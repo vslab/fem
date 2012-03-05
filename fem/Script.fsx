@@ -11,45 +11,29 @@ open Module1
 #r @"System.Windows.Forms.DataVisualization.dll"
 open MSDN.FSharp.Charting
 
-// example with good seeds
-let x1 = Uniform.getSource(Uniform.fresh())
-let x2 = Uniform.getSource(Uniform.fresh())
-let x3 = Uniform.getSource(Uniform.fresh())
-let x4 = Uniform.getSource(Uniform.fresh())
-let x5 = Uniform.getSource(Uniform.fresh())
-let x6 = Uniform.getSource(Uniform.fresh())
-let x7 = Uniform.getSource(Uniform.fresh())
-let x8 = Uniform.getSource(Uniform.fresh())
-let sources = [x1; x2; x3; x4; x5; x6; x7; x8]
 
 
-let advanceAll (sList:samplerEnumerator list) =
-    sList |> List.iter (fun s -> Uniform.moveNext(s))
+let independent () =
+  let s1 = Uniform.givemeSampler "gaussian1m"
+  let s2 = Uniform.givemeSampler "gaussian1s"
+  let s3 = Uniform.givemeSampler "gaussian2m"
+  let s4 = Uniform.givemeSampler "gaussian2s"
+  let s5 = Uniform.givemeSampler "gaussian3m"
+  let s6 = Uniform.givemeSampler "gaussian3s"
+  let s7 = Uniform.givemeSampler "gaussian4m"
+  let s8 = Uniform.givemeSampler "gaussian4s"
+  (gaussianBoxMuller 0. 1. s1 s2) + (gaussianBoxMuller 0. 1. s3 s4) +
+  (gaussianBoxMuller 0. 1. s5 s6) + (gaussianBoxMuller 0. 1. s7 s8)
 
-let printAll (sList:samplerEnumerator list) =
-    sList |> List.iter (fun s -> printf "\n%f" s.Current)
-
-printAll sources
-advanceAll sources
-
-let makeSeq (sList:samplerEnumerator list) f =
-    seq {
-        while (true) do
-            advanceAll sList        
-            yield f sList
-    }
-
-let foo1 (sList:samplerEnumerator list) =
-  (gaussianBoxMuller 0. 1. sList.[0] sList.[1]) + (gaussianBoxMuller 0. 1. sList.[2] sList.[3]) +
-  (gaussianBoxMuller 0. 1. sList.[4] sList.[5]) + (gaussianBoxMuller 0. 1. sList.[6] sList.[7])
-
-let foo2 (sList:samplerEnumerator list) =
-  (gaussianBoxMuller 0. 1. sList.[0] sList.[1]) +   (gaussianBoxMuller 0. 1. sList.[0] sList.[1]) +
-  (gaussianBoxMuller 0. 1. sList.[0] sList.[1]) +   (gaussianBoxMuller 0. 1. sList.[0] sList.[1])
+let dependent () =
+  let s1 = Uniform.givemeSampler "gaussian1m"
+  let s2 = Uniform.givemeSampler "gaussian1s"
+  (gaussianBoxMuller 0. 1. s1 s2) +   (gaussianBoxMuller 0. 1. s1 s2) +
+  (gaussianBoxMuller 0. 1. s1 s2) +   (gaussianBoxMuller 0. 1. s1 s2)
 
 FSharpChart.Rows [
-  makeSeq sources foo1  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column ;
-  makeSeq sources foo2  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column
+  Uniform.makeSeq independent  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column ;
+  Uniform.makeSeq dependent  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column
  ] |> FSharpChart.Create
 
 // http://en.wikibooks.org/wiki/F_Sharp_Programming/Computation_Expressions
