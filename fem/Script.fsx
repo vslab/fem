@@ -11,17 +11,26 @@ open Module1
 #r @"System.Windows.Forms.DataVisualization.dll"
 open MSDN.FSharp.Charting
 
-let x1 = Uniform.getSource(1)
-let x2 = Uniform.getSource(2)
-let x3 = Uniform.getSource(3)
-let x4 = Uniform.getSource(4)
-let sources = [x1; x2; x3; x4]
+// example with good seeds
+let x1 = Uniform.getSource(Uniform.fresh())
+let x2 = Uniform.getSource(Uniform.fresh())
+let x3 = Uniform.getSource(Uniform.fresh())
+let x4 = Uniform.getSource(Uniform.fresh())
+let x5 = Uniform.getSource(Uniform.fresh())
+let x6 = Uniform.getSource(Uniform.fresh())
+let x7 = Uniform.getSource(Uniform.fresh())
+let x8 = Uniform.getSource(Uniform.fresh())
+let sources = [x1; x2; x3; x4; x5; x6; x7; x8]
 
-let foo1 (sList:samplerEnumerator list) =
-  (gaussianBoxMuller 0. 1. sList.[0] sList.[1]) + (gaussianBoxMuller 1. 1. sList.[2] sList.[3])
 
 let advanceAll (sList:samplerEnumerator list) =
     sList |> List.iter (fun s -> Uniform.moveNext(s))
+
+let printAll (sList:samplerEnumerator list) =
+    sList |> List.iter (fun s -> printf "\n%f" s.Current)
+
+printAll sources
+advanceAll sources
 
 let makeSeq (sList:samplerEnumerator list) f =
     seq {
@@ -30,9 +39,17 @@ let makeSeq (sList:samplerEnumerator list) f =
             yield f sList
     }
 
+let foo1 (sList:samplerEnumerator list) =
+  (gaussianBoxMuller 0. 1. sList.[0] sList.[1]) + (gaussianBoxMuller 0. 1. sList.[2] sList.[3]) +
+  (gaussianBoxMuller 0. 1. sList.[4] sList.[5]) + (gaussianBoxMuller 0. 1. sList.[6] sList.[7])
+
+let foo2 (sList:samplerEnumerator list) =
+  (gaussianBoxMuller 0. 1. sList.[0] sList.[1]) +   (gaussianBoxMuller 0. 1. sList.[0] sList.[1]) +
+  (gaussianBoxMuller 0. 1. sList.[0] sList.[1]) +   (gaussianBoxMuller 0. 1. sList.[0] sList.[1])
 
 FSharpChart.Rows [
-  makeSeq sources foo1  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column
+  makeSeq sources foo1  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column ;
+  makeSeq sources foo2  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column
  ] |> FSharpChart.Create
 
 // http://en.wikibooks.org/wiki/F_Sharp_Programming/Computation_Expressions

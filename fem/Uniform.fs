@@ -1,12 +1,14 @@
 ﻿module Uniform
 
 type samplerEnumerator = System.Collections.Generic.IEnumerator<float>
-  
+
+let seedGenerator = System.Random(1)
+
 let seed = ref 0
 
 let getSeq id = seq { let r = System.Random(id) in while true do yield r.NextDouble() }
 
-let fresh () = seed := !seed + 1; !seed
+let fresh () = seed := seedGenerator.Next(); !seed
 
 let getSource id =
   let s = getSeq id
