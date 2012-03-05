@@ -18,3 +18,9 @@ let nextSample (ss:samplerEnumerator) =
   let s = ss.Current
   ss.MoveNext() |> ignore
   s
+
+let currSample (ss:samplerEnumerator) =
+  ss.Current
+
+let moveNext (ss:samplerEnumerator) =
+  ss.MoveNext() |> ignore

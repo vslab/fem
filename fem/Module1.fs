@@ -4,13 +4,13 @@ module Module1
 
 type samplerEnumerator = Uniform.samplerEnumerator
 
-let gaussianBoxMuller m sigma (s:samplerEnumerator) =
-  let u = Uniform.nextSample s
-  let v = Uniform.nextSample s
+let gaussianBoxMuller m sigma (s1:samplerEnumerator) (s2:samplerEnumerator) =
+  let u = Uniform.currSample s1
+  let v = Uniform.currSample s2
   m + sigma * sqrt(-2. * log(u)) * cos(2. * System.Math.PI * v)
 
 let bernoulli p (s:samplerEnumerator) =
-  let u = Uniform.nextSample s
+  let u = Uniform.currSample s
   u <= p
 
 let binomial p n0 (s:samplerEnumerator) =
@@ -28,12 +28,6 @@ let binomial p n0 (s:samplerEnumerator) =
 let delta x (_:samplerEnumerator) =
   x
 
-        
-let sample func =
-    seq {
-      let ss = Uniform.fresh() |> Uniform.getSource
-      while true do yield (ss |> func)
-    }
 
 
 let bucket (x:float) y =

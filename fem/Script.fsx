@@ -23,5 +23,23 @@ FSharpChart.Rows [
   sample foo1  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column
  ] |> FSharpChart.Create
 
+// http://en.wikibooks.org/wiki/F_Sharp_Programming/Computation_Expressions
 
- 
+type Sum() =
+    member o.Bind(v,f) = f(v)
+    member o.ReturnFrom(v) = v
+
+let sum = Sum()
+
+let m1 =
+    sum {
+        //let! x = 1.
+        return!  1.
+    } 
+
+let m2 = 
+    sum {
+        let! v1 = m1
+        return! v1 + 1.
+    }
+
