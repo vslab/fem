@@ -11,35 +11,29 @@ open Module1
 #r @"System.Windows.Forms.DataVisualization.dll"
 open MSDN.FSharp.Charting
 
-open System.Windows.Forms.DataVisualization
+let x1 = Uniform.getSource(1)
+let x2 = Uniform.getSource(2)
+let x3 = Uniform.getSource(3)
+let x4 = Uniform.getSource(4)
+let sources = [x1; x2; x3; x4]
 
+let foo1 (sList:samplerEnumerator list) =
+  (gaussianBoxMuller 0. 1. sList.[0] sList.[1]) + (gaussianBoxMuller 1. 1. sList.[2] sList.[3])
 
-seq { while true do yield ss |> binomial 0.5 20 } |> Seq.take 1000000 |> Seq.countBy (fun v -> v) |> Seq.toList |> List.sort |> FSharpChart.Line |> FSharpChart.Create
+let advanceAll (sList:samplerEnumerator list) =
+    sList |> List.iter (fun s -> Uniform.moveNext(s))
 
-let foo1 x =
-  (gaussianBoxMuller 0. 1. x) + (gaussianBoxMuller 1. 1. x)
+let makeSeq (sList:samplerEnumerator list) f =
+    seq {
+        while (true) do
+            advanceAll sList        
+            yield f sList
+    }
+
 
 FSharpChart.Rows [
-  sample foo1  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column
+  makeSeq sources foo1  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column
  ] |> FSharpChart.Create
 
 // http://en.wikibooks.org/wiki/F_Sharp_Programming/Computation_Expressions
-
-type Sum() =
-    member o.Bind(v,f) = f(v)
-    member o.ReturnFrom(v) = v
-
-let sum = Sum()
-
-let m1 =
-    sum {
-        //let! x = 1.
-        return!  1.
-    } 
-
-let m2 = 
-    sum {
-        let! v1 = m1
-        return! v1 + 1.
-    }
 
