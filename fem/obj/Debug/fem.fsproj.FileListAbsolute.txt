@@ -1,6 +1,0 @@
-C:\Users\Davide\Desktop\Projects\fem\fem\bin\Debug\ErrorPropagation.XML
-C:\Users\Davide\Desktop\Projects\fem\fem\bin\Debug\ErrorPropagation.dll
-C:\Users\Davide\Desktop\Projects\fem\fem\bin\Debug\ErrorPropagation.pdb
-C:\Users\Davide\Desktop\Projects\fem\fem\obj\Debug\ResolveAssemblyReference.cache
-C:\Users\Davide\Desktop\Projects\fem\fem\obj\Debug\ErrorPropagation.dll
-C:\Users\Davide\Desktop\Projects\fem\fem\obj\Debug\ErrorPropagation.pdb
