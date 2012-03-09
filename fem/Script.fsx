@@ -12,28 +12,53 @@ open Module1
 open MSDN.FSharp.Charting
 
 
+let s n = Uniform.givemeSampler n
+
+let alone () =
+  (gaussianBoxMuller 0. 1. (s "1a") (s "1b")) 
+
+let a() = gaussianBoxMuller 0. 1. (s "1a") (s "1b")
+let b() = gaussianBoxMuller 0. 1. (s "1a") (s "1b")
+let c() = gaussianBoxMuller 0. 1. (s "1a") (s "1b")
+
 
 let independent () =
-  let s1 = Uniform.givemeSampler "gaussian1m"
-  let s2 = Uniform.givemeSampler "gaussian1s"
-  let s3 = Uniform.givemeSampler "gaussian2m"
-  let s4 = Uniform.givemeSampler "gaussian2s"
-  let s5 = Uniform.givemeSampler "gaussian3m"
-  let s6 = Uniform.givemeSampler "gaussian3s"
-  let s7 = Uniform.givemeSampler "gaussian4m"
-  let s8 = Uniform.givemeSampler "gaussian4s"
-  (gaussianBoxMuller 0. 1. s1 s2) + (gaussianBoxMuller 0. 1. s3 s4) +
-  (gaussianBoxMuller 0. 1. s5 s6) + (gaussianBoxMuller 0. 1. s7 s8)
+  (gaussianBoxMuller 0. 1. (s "1a") (s "1b")) + (gaussianBoxMuller 0. 1. (s "2a") (s "2b")) //+
+  //(gaussianBoxMuller 0. 1. (s "3a") (s "3b")) + (gaussianBoxMuller 0. 1. (s "4a") (s "4b"))
 
 let dependent () =
-  let s1 = Uniform.givemeSampler "gaussian1m"
-  let s2 = Uniform.givemeSampler "gaussian1s"
-  (gaussianBoxMuller 0. 1. s1 s2) +   (gaussianBoxMuller 0. 1. s1 s2) +
-  (gaussianBoxMuller 0. 1. s1 s2) +   (gaussianBoxMuller 0. 1. s1 s2)
+  (gaussianBoxMuller 0. 1. (s "1a") (s "1b")) +   (gaussianBoxMuller 0. 1. (s "1a") (s "1b")) //+
+  //(gaussianBoxMuller 0. 1. (s "1a") (s "1b")) +   (gaussianBoxMuller 0. 1. (s "1a") (s "1b"))
 
 FSharpChart.Rows [
+  Uniform.makeSeq (a+b+c)  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column ;
   Uniform.makeSeq independent  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column ;
   Uniform.makeSeq dependent  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column
+ ] |> FSharpChart.Create
+
+let f() = a()+b()+c()
+
+let mul () =
+   (gaussianBoxMuller 0. 1. (s "1a") (s "1b"))
+
+let mul2 () =
+   (gaussianBoxMuller 0. 1. (s "1a") (s "1b")) * 2.
+
+   fn : float -> float -> float -> float
+   
+   seq {
+     let x = a + b
+     }
+
+dist {
+let x = fn a b c
+}
+let f1() =
+    a1=a()
+
+
+FSharpChart.Rows [
+  Uniform.makeSeq f  |> Seq.take 100000 |> bucket 5. |> FSharpChart.Column ;
  ] |> FSharpChart.Create
 
 // http://en.wikibooks.org/wiki/F_Sharp_Programming/Computation_Expressions

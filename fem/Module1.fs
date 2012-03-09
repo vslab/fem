@@ -23,14 +23,23 @@ let binomial p n0 (s:samplerEnumerator) =
             if b then 1. + x else x
     binomialp n0
 
-
-
 let delta x (_:samplerEnumerator) =
   x
 
-
-
 let bucket (x:float) y =
       y |> Seq.countBy(fun v -> floor(v*x)/x) |> Seq.toList |> Seq.sortBy (fun (x,_)-> x )
+
+let test =
+  let a = ref 0. 
+  seq {
+    while true do
+        a := !a + 0.1
+        yield !a
+  }
+
+let t = 
+    test |> Seq.take 10 |> Seq.countBy(fun v -> v % 0.1) |> Seq.toList |> Seq.sortBy (fun (x,_)-> x )
+
+t
 
 
