@@ -27,7 +27,6 @@ namespace RandomTools
         private void Realloc()
         {
             cache = new double[cache.Length * 2];
-            Reset();
         }
 
         public RandomSource()
@@ -61,8 +60,11 @@ namespace RandomTools
         {
             //check for cache miss, if so reset and double cache size
             if (counter >= seqNumber + cache.Length)
-                Realloc();
-
+            {
+                if (seqNumber + 1 >= cache.Length)
+                    Realloc();
+                Reset();
+            }
             //generates samples up to the number required
             while (counter < seqNumber)
                 GenNextSample();

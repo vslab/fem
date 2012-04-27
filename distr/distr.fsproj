@@ -41,7 +41,6 @@
   <ItemGroup>
     <Compile Include="RandomVariables.fs" />
     <Compile Include="Distributions.fs" />
-    <Compile Include="FNVHash.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RandomTools\RandomTools.csproj">

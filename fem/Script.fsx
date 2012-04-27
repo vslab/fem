@@ -26,8 +26,8 @@ let measures =  Seq.toList (seq {
         for i = 1 to 100 do yield Dist.toRandom (gaussianBoxMuller (double(i)) 0.5)
     })
 
-let mysum = Seq.fold (fun s v -> s + v) (Random.always 0.) measures
-let myavg = mysum / (Random.always 100.)
+let mysum = Seq.fold (fun s v -> s .+ v) (Random.always 0.) measures
+let myavg = mysum ./ (Random.always 100.)
 myavg
 
 
@@ -36,5 +36,5 @@ myavg
 
 //pippo
 //Seq.zip pippo2 pippo |> Seq.map (fun (x,y) -> x+y )
-//myavg.Samples |> Seq.take 100000  |> bucket 100. |> FSharpChart.Line |> FSharpChart.Create
+myavg.Samples |> Seq.take 100000  |> bucket 100. |> FSharpChart.Line |> FSharpChart.Create
 
