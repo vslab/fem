@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>29068aed-d019-494b-bba9-3fc1dc52728c</ProjectGuid>
+    <ProjectGuid>{c1048f1b-4eb9-4059-b9fc-8a9cb9e5ac31}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>distr</RootNamespace>
     <AssemblyName>distr</AssemblyName>
@@ -39,8 +39,16 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Module1.fs" />
-    <None Include="Script.fsx" />
+    <Compile Include="RandomVariables.fs" />
+    <Compile Include="Distributions.fs" />
+    <Compile Include="FNVHash.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RandomTools\RandomTools.csproj">
+      <Name>RandomTools</Name>
+      <Project>{84663456-5d7c-47a5-922f-e93b870e88de}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
