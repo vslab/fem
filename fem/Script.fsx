@@ -38,3 +38,26 @@ myavg
 //Seq.zip pippo2 pippo |> Seq.map (fun (x,y) -> x+y )
 myavg.Samples |> Seq.take 100000  |> bucket 100. |> FSharpChart.Line |> FSharpChart.Create
 
+
+
+//1) i valori misurati hanno un errore del 5%
+//2) i tempi misurati hanno un errore del 0.001s
+//3) le misure sono fatte ogni circa 1 secondi
+//4) il valore misurato ha una persistenza di 3s
+//5) il tempo di inizio e di fine ha una precisione di 0.1 s
+//6) tutte gli errori supponiamo di forma gaussiana
+
+let tempoIniziale = 0.
+let misure =  Seq.toList (seq{
+    yield (Random.always 0.) , Dist.toRandom (gaussianBoxMuller tempoIniziale 0.1)
+    for i in 1..10 do
+        let errPercentuale = (Dist.toRandom (gaussianBoxMuller 1. 0.05))
+
+        let valore,tempo = float(i)/10.,float(i)
+        yield (Random.always valore) .* errPercentuale, Dist.toRandom (gaussianBoxMuller tempo 0.001)
+     })
+
+
+let integrated = Seq.zip misure (Seq.skip 1 misure) |> Seq.map (fun ((_,t1),(v,t2)) -> v .*(t2 .- t1)) |> Seq.fold (.+) (Random.always 0.)
+
+integrated.Samples |> Seq.take 100000  |> bucket 100. |> FSharpChart.Line |> FSharpChart.Create 
