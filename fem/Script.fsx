@@ -2,8 +2,11 @@
 // It can be used to explore and test the library project.
 // Note that script files will not be part of the project build.
 
-#r @"C:\Users\bartolon\Documents\Visual Studio 2010\Projects\fem\distr\bin\Release\RandomTools.dll"
-#r @"C:\Users\bartolon\Documents\Visual Studio 2010\Projects\fem\distr\bin\Release\distr.dll"
+#I @"C:\Users\bartolon\Documents\Visual Studio 2010\Projects\fem\distr\bin\Release"
+#I @"C:\Users\Davide\Desktop\Projects\fem\fem\bin\Debug"
+
+#r @"RandomTools.dll"
+#r @"distr.dll"
 
 open Distributions
 open RandomTools
@@ -48,16 +51,31 @@ myavg.Samples |> Seq.take 100000  |> bucket 100. |> FSharpChart.Line |> FSharpCh
 //6) tutte gli errori supponiamo di forma gaussiana
 
 let tempoIniziale = 0.
-let misure =  Seq.toList (seq{
-    yield (Random.always 0.) , Dist.toRandom (gaussianBoxMuller tempoIniziale 0.1)
-    for i in 1..10 do
-        let errPercentuale = (Dist.toRandom (gaussianBoxMuller 1. 0.05))
 
-        let valore,tempo = float(i)/10.,float(i)
+let nums1 = [| 2.0 ; 3.0 ; 4.0 ; 4.0 ; 5.0 ; 5.0 ; 6.0 ; 3.0; 2.0 ; 2.0 |]
+let nums2 = [| 2.0 ; 4.0 ; 5.0 ; 6.0 ; 5.0 ; 2.0 ; 6.0 ; 5.0; 4.0 ; 2.0 |]
+
+let misure (nums:float[]) =  Seq.toList (seq{
+    yield (Random.always 0.) , Dist.toRandom (gaussianBoxMuller tempoIniziale 0.1)
+    for i in 0..9 do
+        let errPercentuale = (Dist.toRandom (gaussianBoxMuller 1. 0.05))
+        let valore,tempo = float(nums.[i]),float(i)
         yield (Random.always valore) .* errPercentuale, Dist.toRandom (gaussianBoxMuller tempo 0.001)
      })
 
 
-let integrated = Seq.zip misure (Seq.skip 1 misure) |> Seq.map (fun ((_,t1),(v,t2)) -> v .*(t2 .- t1)) |> Seq.fold (.+) (Random.always 0.)
+let integrated l = Seq.zip l (Seq.skip 1 l) |> Seq.map (fun ((_,t1),(v,t2)) -> v .*(t2 .- t1)) |> Seq.fold (.+) (Random.always 0.)
+let integral1 = integrated (misure nums1)
+let integral2 = integrated (misure nums2)
 
-integrated.Samples |> Seq.take 100000  |> bucket 100. |> FSharpChart.Line |> FSharpChart.Create 
+let N = 50000
+
+integral1.Samples |> Seq.take N  |> bucket 100. |> FSharpChart.Line |> FSharpChart.Create 
+let avg1 = integral1.Samples |> Seq.take N |> Seq.average
+let stdDev1 = System.Math.Sqrt ((integral1.Samples |> Seq.take N |> Seq.fold (fun (s:float) (x:float) -> s + (x-avg)*(x-avg) ) (0.) ) / float(N) )
+
+integral2.Samples |> Seq.take N  |> bucket 100. |> FSharpChart.Line |> FSharpChart.Create 
+let avg2 = integral2.Samples |> Seq.take N |> Seq.average
+let stdDev2 = System.Math.Sqrt ((integral2.Samples |> Seq.take N |> Seq.fold (fun (s:float) (x:float) -> s + (x-avg)*(x-avg) ) (0.) ) / float(N) )
+
+
