@@ -56,6 +56,8 @@ type DistributionBuilder () =
                 member d.Next g = fst (d.NextValue g)
                 member d.NextValue g = (g,expr)
         }
+    member d.ReturnFrom (expr:Distribution<'T>) =
+            expr
 
 
 let dist = new DistributionBuilder()
@@ -69,6 +71,7 @@ module Dist =
     let toRandom d = RandomVariables.RandomVariable(toRandomRaw d (gen ()))
 
 let uniform = {
+    //samples: uniform values in [0,1)
     new Distribution<double> with
                 member d.NextValue g = g.NextValue
                 member d.Value g = snd (d.NextValue g)

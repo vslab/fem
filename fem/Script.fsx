@@ -55,6 +55,47 @@ myavg.Samples |> Seq.take 100000  |> bucket 100. |> FSharpChart.Line |> FSharpCh
 //5) il tempo di inizio e di fine ha una precisione di 0.1 s
 //6) tutte gli errori supponiamo di forma gaussiana
 
+let step a b p = dist {
+    let! s = uniform
+    return if s<p then a else b
+    }
+
+(*let rec distance n = 
+    if n = 0 then
+        Random.always 0,Random.always 0
+    else
+        let lastStep,maxVal = distance (n - 1)
+        let newStep = Dist.toRandom(step -1 1 0.5)
+        let newVal = lastStep .+ newStep
+        //let a = RandomVariable.lift2 (max)
+        (newVal, RandomVariable.lift2 max newVal maxVal)
+        *)
+
+let rec supera stepnumber value =
+    if value <= 0 then
+        constDist 1.
+    else if stepnumber = 0 then
+        constDist 0.
+    else
+        dist {
+            let! newStep = step -1 1 0.5
+            return! supera (stepnumber - 1) (value - newStep)
+            }
+
+        //dist.Bind(step -1 1 0.5,fun newStep -> dist.Bind(supera (stepnumber - 1) (value - newStep),fun recurse -> dist.Return(recurse)))
+//probabilita' che dopo n step abbiamo superato un valore N
+
+
+let rec probab wastable distance =
+    let p = 0.5
+    if distance <= 0 then
+        1.0
+    else if wastable <= 0 then
+        0.0
+    else
+        (1.0 - p) * probab (wastable - 1) (distance + 1) + p * probab (wastable - 1) (distance - 1)
+        
+
 let initialTime = 0.
 let N = 50000
 
