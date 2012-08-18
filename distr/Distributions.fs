@@ -78,7 +78,7 @@ let uniform = {
                 member d.Next g = fst (d.NextValue g)
     }
 
-let gaussianBoxMuller (m:double) (sigma:double) =
+let gaussianBoxMuller (m:float<_>) (sigma:float<_>) =
   dist {
     let! u = uniform
     let! v = uniform
