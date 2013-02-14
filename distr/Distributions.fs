@@ -62,13 +62,13 @@ type DistributionBuilder () =
 
 let dist = new DistributionBuilder()
 
-module Dist =
-    let rec toRandomRaw (d:Distribution<'T>) (g:Generator) = seq {
-            let g1,v = d.NextValue g
-            yield v
-            yield! toRandomRaw d g1
-    }
-    let toRandom d = RandomVariables.RandomVariable(toRandomRaw d (gen ()))
+//module Dist =
+//    let rec toRandomRaw (d:Distribution<'T>) (g:Generator) = seq {
+//            let g1,v = d.NextValue g
+//            yield v
+//            yield! toRandomRaw d g1
+//    }
+//    let toRandom d = RandomVariables.RandomVariable(toRandomRaw d (gen ()))
 
 let uniform = {
     //samples: uniform values in [0,1)
