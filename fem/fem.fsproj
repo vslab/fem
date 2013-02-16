@@ -45,10 +45,7 @@
     <Reference Include="System.Windows.Forms.DataVisualization" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Uniform.fs" />
-    <None Include="Module1.fs" />
-    <Compile Include="Script.fsx" />
-    <None Include="monadi.fsx" />
+    <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\distr\distr.fsproj">

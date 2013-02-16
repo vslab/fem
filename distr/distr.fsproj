@@ -39,8 +39,8 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="RandomVariables.fs" />
     <Compile Include="Distributions.fs" />
+    <Compile Include="RandomVariables.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RandomTools\RandomTools.csproj">

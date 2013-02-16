@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fem", "fem\fem.fsproj", "{8386AD68-BD59-408E-B281-0985CBF866AC}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "distr", "distr\distr.fsproj", "{C1048F1B-4EB9-4059-B9FC-8A9CB9E5AC31}"
