@@ -6,43 +6,40 @@
 //variabile aleatoria: un oggetto con una distribuzione, ed eventualmente correlato a variabili aleatorie precedenti.
 module Distributions
 
-type T = double
+//value type for generator (and thus for uniform) samples
+type Gen_Sample_T = double
 
-type Generator =
-    abstract NextValue: Generator * T
+//abstract type for random source generator:
+type IGenerator =
+    abstract NextValue: IGenerator * Gen_Sample_T
 
-let randomFuncOrig status =
-    let newStatus = (new System.Random(status)).Next()
-    let value = (new System.Random(status)).NextDouble()
-    (newStatus,value)
-
-let randomFunc status =
-    let (g:RandomTools.RandomSource),idx = status
-    let newStatus = (g,idx+1)
-    let value = g.GetSample(idx)
-    (newStatus, value)
-
+// functional monadic-style wrapper for generator 
 let rec genRaw status =
+    let randomFunc status =
+        let (g:RandomTools.RandomSource),idx = status
+        let newStatus = (g,idx+1)
+        let value = g.GetSample(idx)
+        (newStatus, value)
     {
-        new Generator with
+        new IGenerator with
             member g.NextValue = let status,value = randomFunc status
                                  (genRaw status, value)
     }
 
-
+// new generator constructor
 let gen () =
     genRaw ((new RandomTools.RandomSource () ) ,0)
 
-type Distribution<'T> =
-    abstract NextValue: Generator -> Generator * 'T
-    abstract Value: Generator -> 'T
-    abstract Next: Generator -> Generator
+type IDistribution<'T> =
+    abstract NextValue: IGenerator -> IGenerator * 'T
+    abstract Value: IGenerator -> 'T
+    abstract Next: IGenerator -> IGenerator
 
 
 type DistributionBuilder () = 
-    member d.Bind ((expr:Distribution<'T>), (f: 'T -> Distribution<'U>)) =
+    member d.Bind ((expr:IDistribution<'T>), (f: 'T -> IDistribution<'U>)) =
        {
-            new Distribution<'U> with
+            new IDistribution<'U> with
                 member d.Value g = snd (d.NextValue g)
                 member d.Next g = fst (d.NextValue g)
                 member d.NextValue g =
@@ -51,61 +48,37 @@ type DistributionBuilder () =
         }
     member d.Return (expr:'T) =
         {
-            new Distribution<'T> with
+            new IDistribution<'T> with
                 member d.Value g = snd (d.NextValue g)
                 member d.Next g = fst (d.NextValue g)
                 member d.NextValue g = (g,expr)
         }
-    member d.ReturnFrom (expr:Distribution<'T>) =
+    member d.ReturnFrom (expr:IDistribution<'T>) =
             expr
 
 
 let dist = new DistributionBuilder()
 
-//module Dist =
-//    let rec toRandomRaw (d:Distribution<'T>) (g:Generator) = seq {
-//            let g1,v = d.NextValue g
-//            yield v
-//            yield! toRandomRaw d g1
-//    }
-//    let toRandom d = RandomVariables.RandomVariable(toRandomRaw d (gen ()))
+module Dist =
+    let rec getSampleSeq (d:IDistribution<'T>) (g:IGenerator) =
+        seq {
+            let g1,v = d.NextValue g
+            yield v
+            yield! getSampleSeq d g1
+        }
 
-let uniform = {
-    //samples: uniform values in [0,1)
-    new Distribution<double> with
-                member d.NextValue g = g.NextValue
-                member d.Value g = snd (d.NextValue g)
-                member d.Next g = fst (d.NextValue g)
-    }
+    let uniform = {
+        new IDistribution<double> with
+                    member d.NextValue g = g.NextValue
+                    member d.Value g = snd (d.NextValue g)
+                    member d.Next g = fst (d.NextValue g)
+        }
 
-let gaussianBoxMuller (m:float<_>) (sigma:float<_>) =
-  dist {
-    let! u = uniform
-    let! v = uniform
-    return m + sigma * sqrt(-2. * log(1.-u)) * cos(2. * System.Math.PI * v)
-  }
-
-let constDist x = dist { return x }
-
-(*
-
-let sample d: Distribution<'T> -> ('T , Distribution<'T>)=
-    return d
-
-let gaussianBoxMuller m sigma u = dist {
-    let! first = sample u
-    let! second = sample u
-    return m + sigma * sqrt(-2. * log(first)) * cos(2. * System.Math.PI * second)
-}
-let myGauss = Distr.toAleatoria (GaussianBoxMuller 3.14 0.618)
-let myGauss2 = Distr.toAleatoria (GaussianBoxMuller 3.14 0.618)
-let myGauss3 = myGauss2
-let a = myGauss + myGauss2
-let b = a - myGauss3
-let SampleSeq = b.Samples
-
-let plus a b =  new Aleatoria<'U> with
-    member this.Samples = zip a.Samples b.Samples |> Seq.map plus
-*)
-
-
+    let normal m s =
+        let gaussianBoxMuller (m:float<_>) (sigma:float<_>) =
+            dist {
+                let! u = uniform
+                let! v = uniform
+                return m + sigma * sqrt(-2. * log(1.-u)) * cos(2. * System.Math.PI * v)
+            }
+        gaussianBoxMuller m s

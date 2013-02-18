@@ -4,7 +4,7 @@ open Distributions
 type GenId = int
 
 type RandomVariable =
-    | FromDist of obj Distribution * GenId
+    | FromDist of obj IDistribution * GenId
     | Always of obj
     | Bind of RandomVariable * (obj -> RandomVariable)
 
@@ -17,7 +17,7 @@ type RandomVariableBuilder() =
     member x.Bind (a:RGen<'U>,f:'U ->RGen<'T>) =
         RGen<'T>.R (Bind(match a with R b -> b,fun (x:obj) -> match f (x :?> 'U) with R v -> v))
 
-    member x.Bind (a:Distribution<'U>,f:'U -> RGen<'T>) = 
+    member x.Bind (a:IDistribution<'U>,f:'U -> RGen<'T>) = 
         let id = System.Threading.Interlocked.Increment(lastId)
         if id = LanguagePrimitives.GenericZero then raise (new System.Exception("Maximum number of variable reached"))
         let dobj = dist{let! q = a in return q :> obj}
