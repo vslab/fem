@@ -27,6 +27,9 @@ type RandomVariableBuilder() =
     member x.Return (v: 'T) =
         RGen<'T>.R (Always v)
 
+    member x.ReturnFrom (v:RGen<'T>) =
+        v
+
     static member getEnvDist (x:RandomVariable) (env: Map<GenId,obj>) =
         match x with
         | Always v -> dist { return v, env } 
