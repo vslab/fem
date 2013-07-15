@@ -2,7 +2,68 @@
 // It can be used to explore and test the library project.
 // Note that script files will not be part of the project build.
 
+
+
+
+type Nat =
+    | Zero
+    | Succ of Nat
+
+let isZero n =
+    match n with
+    | Zero -> true
+    | Succ m -> false
+
+let rec isEven n =
+    match n with
+    | Zero -> true
+    | Succ m -> not (isEven m)
+
+let quattro = Succ (Succ ( Succ( Succ( Zero))))
+
+isEven quattro
+
+let cinque = Succ (quattro)
+
+isEven cinque
+
+type 'T lista =
+    | Empty
+    | Cons of 'T * ('T lista)
+
+let rec count l =
+    match l with
+    | Empty -> 0
+    | Cons (_,t) -> 1 + count t
+
+let rec count l =
+    match l with
+    | [] -> 0
+    | _::t -> 1 + count t
+
+let rec fib n =
+    match n with
+    | 0 -> 1
+    | 1 -> 1
+    | m -> ( fib m-1 ) + ( fib m-2 )
+
+let scambia a b lista =
+    let f i =
+        if i = 4 then
+            2
+        else if i = 2 then
+            4
+        else
+            i
+    List.permute f lista
+
+let s u = seq {
+    let! a = u
+    return a
+    }
+
 #I @"C:\Users\bartolon\Documents\Visual Studio 2010\Projects\fem\distr\bin\Release"
+#I @"C:\Users\pq\Documents\GitHub\fem\distr\bin\Release"
 #I @"C:\Users\Davide\Desktop\Projects\fem\fem\bin\Debug"
 #I @"C:\progetti\fem\distr\bin\Debug"
 
@@ -142,4 +203,164 @@ let J2 = (Seq.average nums2) * float(nums2.Length)
 let m = Dist.toRandom (gaussianBoxMuller 1. 0.1) .+ (Random.always 10.)
 m.Samples |> Seq.take N  |> bucket 100. |> FSharpChart.Line |> FSharpChart.Create 
 
+open Distributions
+open Dist
 
+let bernoulli p = dist {
+        let! uniformSample = uniform
+        return p > uniformSample
+    }
+    
+let rec binomial p n = dist {
+        if n = 0 then
+            return 0
+        else       
+            let! bernoulliSample = bernoulli p
+            let! recursiveSample = binomial p (n-1)
+            if bernoulliSample then
+                return recursiveSample
+            else
+                return recursiveSample + 1
+    }
+
+let rec exponential l =
+    dist {
+        let! uSample = uniform //samples uniform, put result in uniformSample
+        return - System.Math.Log(1.0-uSample) / l
+    }
+
+
+let pairTable (t:seq<double*'a>) uniform =
+        let ru = ref uniform
+        t |> Seq.find (fun (p,v) ->
+                    ru := (!ru) - p
+                    !ru < 0.0
+                    )
+
+type Species =
+    | A = 0
+    | B = 1
+    | C = 2
+    | D = 3
+
+let reactions = [
+    //reagents      products        k
+    [0]         ,   [1;2]       ,   0.5
+    [0; 1]      ,   [1;3]       ,   0.2
+    ]
+
+let probabilityMapper (status:int list) (input:int seq,_,k) =
+        input |> Seq.fold (fun cumulative sp -> ( double (status.[int sp]) )* cumulative) k
+
+let initialStatus = [1000000000;0;0;0]
+
+let updateStatus st r =
+    let i,o,_ = r
+    st |> List.mapi (fun n el-> 
+        let el = i|> Seq.fold (fun s r -> if n = int r then (s-1) else s) el 
+        let el = o|> Seq.fold (fun s r -> if n = int r then (s+1) else s) el
+        el         
+        )
+
+
+let steps = 
+    //in order to ensure evaluation of FromDist is performed only once for each step
+    Seq.cache (
+        seq {
+        let mutable lastStatus = random {
+            return initialStatus,0.0
+        }
+        yield lastStatus
+        while true do
+            let exp = exponential 1.0 |> random.FromDist
+            let u = uniform |> random.FromDist
+            lastStatus <- random {
+                let! status,time = lastStatus
+                let probList = reactions |> List.map (probabilityMapper status)
+                let probSum = probList |> List.sum
+                let! nextTime = exp in let nextTime = nextTime * probSum
+                let! selector = u in let _,reaction = pairTable ((probList|> Seq.map (fun x -> x/probSum) |> Seq.zip) reactions ) selector
+                return updateStatus status reaction,time + nextTime
+                }
+            yield lastStatus
+        })
+
+let status time =
+    let rec euo s = random {
+            let! status,t = Seq.head s
+            if time< t then
+                return None
+            else
+                let! recurse = euo (s |> Seq.skip 1)
+                match recurse with
+                | Some x -> return Some x
+                | None -> return Some (status,t)                   
+        }
+    random {
+        let! result = euo steps
+        match result with
+        | Some (s,t) -> return s
+        | None -> return initialStatus
+        }
+
+
+
+// example #: a chain is composed of many links, made using the same production process.
+// What's the maximum load we can use the chain for, given its lenght and maximum load for a single ring?
+// ring specifications: each link weights 0.1 +- 0.02 kg, and it's breaking load is 100 +-0.1+-0.1 kg
+// (first error is same on all rings from same chain, second error is due to random material imperfection)
+[<Measure>] type kg
+
+let newRing =
+    let systematicLoadError = random.FromDist( Dist.normal 0.0<kg> 0.1<kg>)
+    fun () ->
+        let ringBreakingLoad = random.FromDist( Dist.normal 100.0<kg> 0.1<kg>)
+        let ringWeight = random.FromDist( Dist.normal 0.1<kg> 0.02<kg>)
+        random {
+        let! systematicError = systematicLoadError
+        let! ringBreakingLoad = ringBreakingLoad
+        let! ringWeight = ringWeight
+        return ringBreakingLoad + systematicError,ringWeight
+        }
+
+let rec chain n = random {
+        let! headBreakingLoad,headWeight = newRing()
+        if n = 1 then
+            return headBreakingLoad,headWeight 
+        else
+            let! tailBreakingLoad,tailWeight = chain (n-1)
+            return (min (headBreakingLoad - tailWeight) tailBreakingLoad),tailWeight + headWeight
+    }
+
+let hundredRings = getDist (chain 100)
+Dist.getSampleSeq hundredRings (gen()) |> Seq.take 1000000 |> Seq.map fst |> Seq.average
+
+type weather = 
+    | Rain
+    | Sun
+
+let weatherForecast = random {
+    let! b = bernoulli 0.25
+    return if b then Rain else Sun
+    }
+    
+let willRain = random {
+    let! forecast = weatherForecast
+    let! forecastWrong = bernoulli 0.1
+    match forecast with
+    | Sun -> return forecastWrong 
+    | Rain -> return not forecastWrong
+    }
+
+let maryBringsUmbrella = random {
+    let! forecast = weatherForecast
+    match forecast with
+    | Rain -> return true
+    | Sun -> let! bringAnyway = bernoulli 0.2 in return bringAnyway
+    }
+    
+let maryGetsWet = random {
+    let! rain = willRain
+    let! umbrella = maryBringsUmbrella
+    return rain && (not umbrella)
+    }

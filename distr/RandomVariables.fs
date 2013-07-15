@@ -8,21 +8,48 @@ type RandomVariable =
     | Always of obj
     | Bind of RandomVariable * (obj -> RandomVariable)
 
+type Bdd = 
+    | True
+    | False
+    | Fork of GenId * Bdd * Bdd
+
+type Event =
+    | True
+    | False
+    | Var of bool IDistribution * GenId
+    | Bind of Event * Event * Event
+
 type RGen<'T> =
     | R of RandomVariable
 
+
+fun eval b = 
+type EventBuilder() =
+    let lastId: GenId ref = ref (LanguagePrimitives.GenericZero)
+
+    member x.Bind(a:Event, f:bool -> Event) =
+        match a with
+        | True -> f true
+        | False -> f false
+        | Bind (e,f,g) -> s
+        | Var (d,id)-> Bdd.Fork
+        
+    member x.Return (v:bool) =
+        if v then Event.True else Event.False
+
 type RandomVariableBuilder() =
     let lastId:GenId ref = ref (LanguagePrimitives.GenericZero)
-
+        
     member x.Bind (a:RGen<'U>,f:'U ->RGen<'T>) =
         RGen<'T>.R (Bind(match a with R b -> b,fun (x:obj) -> match f (x :?> 'U) with R v -> v))
 
-    member x.Bind (a:IDistribution<'U>,f:'U -> RGen<'T>) = 
+    member x.FromDist (d:IDistribution<'T>) =
         let id = System.Threading.Interlocked.Increment(lastId)
-        if id = LanguagePrimitives.GenericZero then raise (new System.Exception("Maximum number of variable reached"))
-        let dobj = dist{let! q = a in return q :> obj}
-        let fdist = FromDist(dobj ,id)
-        x.Bind(RGen<'U>.R(fdist),f)
+        let dobj = dist{let! q = d in return q :> obj}
+        RGen<'T>.R(FromDist(dobj,id))
+
+    member x.BindDist (a:IDistribution<'U>,f:'U -> RGen<'T>) = 
+        x.Bind(x.FromDist(a),f)
 
     member x.Return (v: 'T) =
         RGen<'T>.R (Always v)
@@ -44,6 +71,11 @@ type RandomVariableBuilder() =
         }
  
 let random = new RandomVariableBuilder()
+
+let event = new EventBuilder()
+
+let fromDist (d:IDistribution<'T>) =
+    random.FromDist d
 
 let getDist (v:RGen<'T> ) = 
     dist {
