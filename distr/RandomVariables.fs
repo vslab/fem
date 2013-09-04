@@ -70,7 +70,7 @@ type RandomVariableBuilder() =
             return! RandomVariableBuilder.getEnvDist (f (va)) ea
         }
  
-let random = new RandomVariableBuilder()
+let rndvar = new RandomVariableBuilder()
 
 let event = new EventBuilder()
 
