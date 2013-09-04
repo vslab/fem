@@ -43,7 +43,7 @@ type RandomVariableBuilder() =
             return! RandomVariableBuilder.getEnvDist (f (va)) ea
         }
  
-let random = new RandomVariableBuilder()
+let rndvar = new RandomVariableBuilder()
 
 let getDist (v:RGen<'T> ) = 
     dist {
