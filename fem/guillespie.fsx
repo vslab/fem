@@ -69,46 +69,37 @@ let updateStatus st r =
         )
 
 
-let steps = 
-    //in order to ensure evaluation of FromDist is performed only once for each step
-    Seq.cache (
-        seq {
-        let lastStatus = ref (random {
-            return initialStatus,0.0
-        })
-        yield !lastStatus
-        while true do
-            let exp = exponential 1.0 |> random.FromDist
-            let u = uniform |> random.FromDist
-            lastStatus := random {
-                let! status,time = !lastStatus
-                let probList = reactions |> List.map (probabilityMapper status)
-                let probSum = probList |> List.sum
-                let! nextTime = exp in let nextTime = nextTime * probSum
-                let! selector = u in let _,reaction = pairTable ((probList|> Seq.map (fun x -> x/probSum) |> Seq.zip) reactions ) selector
-                return updateStatus status reaction,time + nextTime
-                }
-            yield !lastStatus
-        })
-
-let status time =
-    let rec euo s = random {
-            let! status,t = Seq.head s
-            if time< t then
-                return None
-            else
-                let! recurse = euo (s |> Seq.skip 1)
-                match recurse with
-                | Some x -> return Some x
-                | None -> return Some (status,t)                   
-        }
-    random {
-        let! result = euo steps
-        match result with
-        | Some (s,t) -> return s
-        | None -> return initialStatus
+let speciesDistAt2 = dist {
+    let rec step l = dist {
+        let status, time = List.head l
+        let! exp = exponential 1.0
+        let! u = uniform
+        let probList = reactions |> List.map (probabilityMapper status)
+        let probSum = probList |> List.sum
+        let nextTime = exp in let nextTime = nextTime * probSum
+        let selector = u in let _,reaction = pairTable ((probList|> Seq.map (fun x -> x/probSum) |> Seq.zip) reactions ) selector
+        return (updateStatus status reaction,time + nextTime)::l
         }
 
-let speciesDistAt2 = status 400. |> getDist
+    let status time = dist {
+        let rec euo l = dist {                
+                if time< snd(List.head l) then
+                    return None
+                else
+                    let! step = step l
+                    let! recurse = euo step
+                    match recurse with
+                    | Some x -> return Some x
+                    | None -> return Some (step)
+        }
+        let! v = euo [initialStatus,0.0]
+        match v with
+        | Some x -> return x
+        | _ -> return failwith "puppa"
+    }
+    let! r = status 200.
+    return r
+}
+//return status 200. |> getDist
 Dist.getSampleSeq (speciesDistAt2) (gen())
 Dist.getSampleSeq (steps |> Seq.skip 1 |> Seq.head |> getDist) (gen())

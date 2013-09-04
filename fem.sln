@@ -7,6 +7,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "distr", "distr\distr.fsproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandomTools", "RandomTools\RandomTools.csproj", "{84663456-5D7C-47A5-922F-E93B870E88DE}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SystemBiology", "SystemBiology\SystemBiology.fsproj", "{AFD4953B-4325-40A6-9FE9-028153BF5EB8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,10 @@ Global
 		{84663456-5D7C-47A5-922F-E93B870E88DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84663456-5D7C-47A5-922F-E93B870E88DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84663456-5D7C-47A5-922F-E93B870E88DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFD4953B-4325-40A6-9FE9-028153BF5EB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFD4953B-4325-40A6-9FE9-028153BF5EB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFD4953B-4325-40A6-9FE9-028153BF5EB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFD4953B-4325-40A6-9FE9-028153BF5EB8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
