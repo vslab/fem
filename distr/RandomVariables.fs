@@ -8,34 +8,8 @@ type RandomVariable =
     | Always of obj
     | Bind of RandomVariable * (obj -> RandomVariable)
 
-type Bdd = 
-    | True
-    | False
-    | Fork of GenId * Bdd * Bdd
-
-type Event =
-    | True
-    | False
-    | Var of bool IDistribution * GenId
-    | Bind of Event * Event * Event
-
 type RGen<'T> =
     | R of RandomVariable
-
-
-fun eval b = 
-type EventBuilder() =
-    let lastId: GenId ref = ref (LanguagePrimitives.GenericZero)
-
-    member x.Bind(a:Event, f:bool -> Event) =
-        match a with
-        | True -> f true
-        | False -> f false
-        | Bind (e,f,g) -> s
-        | Var (d,id)-> Bdd.Fork
-        
-    member x.Return (v:bool) =
-        if v then Event.True else Event.False
 
 type RandomVariableBuilder() =
     let lastId:GenId ref = ref (LanguagePrimitives.GenericZero)
@@ -70,15 +44,56 @@ type RandomVariableBuilder() =
             return! RandomVariableBuilder.getEnvDist (f (va)) ea
         }
  
-let rndvar = new RandomVariableBuilder()
+let _rndvar = new RandomVariableBuilder()
 
-let event = new EventBuilder()
 
 let fromDist (d:IDistribution<'T>) =
-    random.FromDist d
+    _rndvar.FromDist d
 
-let getDist (v:RGen<'T> ) = 
+let _getDist (v:RGen<'T> ) = 
     dist {
         let! vx,ex = RandomVariableBuilder.getEnvDist (match v with R w -> w) Map.empty
         return vx :?>'T
         }
+
+
+type NewRandomVariable =
+    | Independent of obj IDistribution * GenId
+    | Bind of NewRandomVariable * (obj -> NewRandomVariable)
+
+type NewRGen<'T> =
+    | R of NewRandomVariable
+
+type NewRandomBuiler() =
+    let lastId:GenId ref = ref (LanguagePrimitives.GenericZero)
+        
+    member x.Bind (a:NewRGen<'U>,f:'U ->NewRGen<'T>) =
+        NewRGen<'T>.R (Bind(match a with R (b) -> b,fun (x:obj) -> match f (x :?> 'U) with R (v) -> v))
+
+    member x.Return (d:IDistribution<'T>) =
+        let id = System.Threading.Interlocked.Increment(lastId)
+        let dobj = dist{let! q = d in return q :> obj}
+        NewRGen<'T>.R (Independent(dobj,id))
+
+let getDist (r:NewRGen<'U>) =
+    let rec memoizedSampling (context:Map<GenId,obj>) (var:NewRandomVariable) =
+        match var with
+        | Independent (E,id) -> 
+            if context.ContainsKey(id) then
+                dist { return context,context.Item(id) }
+            else
+                dist { let! s = E in return context.Add(id,s),s }
+        | Bind (r,f) ->
+            dist {
+                let! context,v = memoizedSampling context r
+                let! context,v = memoizedSampling context (f v)
+                return context,v
+                }
+    match r with
+    | R r ->
+    dist {
+        let! context,v = memoizedSampling Map.empty r
+        return v:?> 'U
+        }
+      
+let rndvar = new NewRandomBuiler()

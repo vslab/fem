@@ -5,6 +5,8 @@
 
 
 
+
+
 type Nat =
     | Zero
     | Succ of Nat
@@ -78,11 +80,55 @@ open RandomVariables
 #r @"System.Windows.Forms.DataVisualization.dll"
 open MSDN.FSharp.Charting
 
-open System.Windows.Forms.DataVisualization
-
 let bucket (x:float) (y:seq<float>) =
       y |> Seq.countBy(fun v -> floor(v*x)/x) |> Seq.toList |> Seq.sortBy (fun (x,_)-> x )
 
+
+let bernoulli p = dist {
+    let! u = Dist.uniform
+    return u< p
+}
+
+let rec binomial x n = dist {
+    if n = 0 then
+        return 0
+    else
+        let! b = (bernoulli x) in
+        let! r = binomial x (n-1) in
+        if b then
+            return 1 + r
+        else
+            return r
+}
+
+let point_uniform = dist {
+    let! x = Dist.uniform in
+        if x > 0.5 then 
+            return 0.5
+        else
+            return 2.0 * x
+}
+
+
+let sampleseq = Dist.getSampleSeq point_uniform (gen())
+
+sampleseq
+
+let coinflip1 = rndvar { return bernoulli 0.5 }
+let coinflip2 = rndvar { return bernoulli 0.5 }
+
+let same x y = rndvar {
+    let! x = x
+    let! y = y
+    return dist { return x = y }
+}
+
+
+let d = dist { let! d = getDist (same coinflip1 coinflip2) in return if d then 0.0 else 1.0 }
+let sseq = Dist.getSampleSeq d (gen())
+
+
+Seq.take 100000 sseq |> Seq.average
 (*
 //let covariance (x:seq<float>) (y:seq<float>) = 
 
@@ -117,7 +163,7 @@ myavg.Samples |> Seq.take 100000  |> bucket 100. |> FSharpChart.Line |> FSharpCh
 //6) tutte gli errori supponiamo di forma gaussiana
 
 let step a b p = dist {
-    let! s = uniform
+    let! s = Dist.uniform
     return if s<p then a else b
     }
 
